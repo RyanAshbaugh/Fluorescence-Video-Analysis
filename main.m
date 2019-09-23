@@ -56,6 +56,10 @@ end
 
 %% Load in the video
 
+disp([ 'Directory: ' meta_data.dname ]);
+disp([ 'File: ' meta_data.fname newline ]);
+
+disp([ 'Reading in video data...' newline ]);
 video = VideoReader(meta_data.fpath);
 green_channel = 2;
 
@@ -66,10 +70,12 @@ green_channel = 2;
 %% Create new video to store threshold absolute gradient
 
 % threshold absolute gradient, or tag, video file setup
+disp([ 'Creating new video for calculating threshold absolute gradient...' ]);
 tag_video_name = ...
 	strrep(meta_data.fname,'.avi','_tag_video.avi');
 tag_video_fpath = ...
 	strcat(meta_data.results_folder,tag_video_name);
+disp([ 'Threshold absolute gradient video: ' tag_video_name newline ]);
 
 tag_video = VideoWriter(tag_video_fpath,'Grayscale AVI');
 tag_video.FrameRate = 5;
@@ -81,23 +87,20 @@ open(tag_video);
 
 % for all but last frame, get frame and the next frame
 
-tag_video_max = 0;
-for ii = 1:1400
-	frame1 = read(video, ii);
-	frame2 = read(video, ii+1);
-	difference_frame = abs( frame2 - frame1 );
-	difference_frame = rgb2gray( difference_frame );
+disp([ 'Processing video to calculate temporal threshold absolute gradient...']);
+for jj = 1:1400
+	frame1 = read(video, jj);
+	frame2 = read(video, jj+1);
+	difference_frame = ...
+		abs( frame2(:,:,green_channel) - frame1(:,:,green_channel) );
+	%difference_frame = rgb2gray( difference_frame );
 
 	writeVideo( tag_video, difference_frame );
 end
 
 %% normalize tag to max change of whole video
 
-% max change in the whole video
-%tag_video_max = max(tag_video,[],'all')
-
-disp([ 'tag_video_max ' num2str(tag_vdieo_max) ]);
-
+disp([ 'Closing video: ' tag_video_name ]);
 close(tag_video);
 
 end
