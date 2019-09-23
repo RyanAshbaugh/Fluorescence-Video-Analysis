@@ -30,7 +30,7 @@ if directory == true
 elseif directory == false
 	% select file with window
 	disp([ newline 'Select a file to open in the window...' ]);
-	[ file, meta_data.dname ] = uigetfile('*.csv','Select File');
+	[ file, meta_data.dname ] = uigetfile('*.avi','Select File');
 	files = dir(strcat(meta_data.dname, file));
 
 end
@@ -54,5 +54,28 @@ if ~exist( meta_data.results_folder, 'dir' )
 	mkdir( meta_data.results_folder )
 end
 
+%% Load in the video
+
+video = VideoReader(meta_data.fpath);
+
+disp([ 'Video has ' video.NumFrames ' frames and resolution ' ...
+	video.Width ',' video.Height])
+
+
+%% Create new video to store threshold absolute gradient
+
+% threshold absolute gradient, or tag, video file setup
+tag_video_name = ...
+	strrep(meta_data.fname,'.avi','_tag_video.avi');
+tag_video_fpath = ...
+	strcat(meta_data.results_folder,tag_video_name);
+
+tag_video = avifile(tag_video_fpath,'compression','None');
+
+%% Go through frames of original video and calculate tag 
+
+% for all but last frame, get frame and the next frame
+
+frame1 = read(video, 1);
 
 end
