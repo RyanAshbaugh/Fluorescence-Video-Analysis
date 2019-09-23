@@ -56,7 +56,7 @@ end
 
 %% Load in the video
 
-video = VideoReader(meta_data.fpath);
+video = VideoReader(meta_data.fpath,'VideoFormat','Grayscale');
 
 %disp([ 'Video has ' video.NumFrames ' frames and resolution ' ...
 %	video.Width ',' video.Height]);
