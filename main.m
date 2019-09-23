@@ -56,7 +56,8 @@ end
 
 %% Load in the video
 
-video = VideoReader(meta_data.fpath,'VideoFormat','Grayscale');
+video = VideoReader(meta_data.fpath);
+green_channel = 2;
 
 %disp([ 'Video has ' video.NumFrames ' frames and resolution ' ...
 %	video.Width ',' video.Height]);
@@ -80,10 +81,13 @@ open(tag_video);
 
 % for all but last frame, get frame and the next frame
 
-
-frame1 = read(video, 1);
-frame2 = read(video, 2);
-size(frame1)
+for ii = 1:100
+	frame1 = read(video, ii);
+	frame2 = read(video, ii+1);
+	difference_frame = abs( frame2 - frame1 );
+	difference_frame = rgb2gray( difference_frame );
+	writeVideo( tag_video, difference_frame );
+end
 
 close(tag_video);
 
