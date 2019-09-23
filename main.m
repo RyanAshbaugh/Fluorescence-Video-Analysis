@@ -81,13 +81,22 @@ open(tag_video);
 
 % for all but last frame, get frame and the next frame
 
-for ii = 1:100
+tag_video_max = 0;
+for ii = 1:1400
 	frame1 = read(video, ii);
 	frame2 = read(video, ii+1);
 	difference_frame = abs( frame2 - frame1 );
 	difference_frame = rgb2gray( difference_frame );
+
 	writeVideo( tag_video, difference_frame );
 end
+
+%% normalize tag to max change of whole video
+
+% max change in the whole video
+%tag_video_max = max(tag_video,[],'all')
+
+disp([ 'tag_video_max ' num2str(tag_vdieo_max) ]);
 
 close(tag_video);
 
