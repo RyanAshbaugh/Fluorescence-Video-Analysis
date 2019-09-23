@@ -58,8 +58,8 @@ end
 
 video = VideoReader(meta_data.fpath);
 
-disp([ 'Video has ' video.NumFrames ' frames and resolution ' ...
-	video.Width ',' video.Height])
+%disp([ 'Video has ' video.NumFrames ' frames and resolution ' ...
+%	video.Width ',' video.Height]);
 
 
 %% Create new video to store threshold absolute gradient
@@ -70,12 +70,21 @@ tag_video_name = ...
 tag_video_fpath = ...
 	strcat(meta_data.results_folder,tag_video_name);
 
-tag_video = avifile(tag_video_fpath,'compression','None');
+tag_video = VideoWriter(tag_video_fpath,'Grayscale AVI');
+tag_video.FrameRate = 5;
+
+% open the new tag video
+open(tag_video);
 
 %% Go through frames of original video and calculate tag 
 
 % for all but last frame, get frame and the next frame
 
+
 frame1 = read(video, 1);
+frame2 = read(video, 2);
+size(frame1)
+
+close(tag_video);
 
 end
