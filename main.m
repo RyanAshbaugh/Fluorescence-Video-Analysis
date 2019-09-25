@@ -18,8 +18,7 @@ if directory == true
 	% select folder with window
 
 	disp([ newline 'Select a folder to open in the window...' ]);
-	meta_data.dname = uigetdir('Select Folder');
-	meta_data.dname = strcat( meta_data.dname, '\');
+	meta_data.dname = strcat(uigetdir('Select Folder'),'\');
 	disp([ 'Folder: ' meta_data.dname newline ]);
 
 	% put all files in folder into a list
@@ -38,8 +37,8 @@ end
 
 %% Go through each file and analyze it
 
-for ii = 1:length(files)
-	meta_data.fname = files(ii).name;
+for file_index = 1:length(files)
+	%{meta_data.fname = files(ii).name;
 	meta_data.fpath = [ meta_data.dname filesep files(ii).name ];
 	backslashes = strfind(meta_data.dname,'\');
 	meta_data.experiment_name = ...
@@ -54,6 +53,8 @@ for ii = 1:length(files)
 		disp([ 'Making directory: ' meta_data.results_folder ]);
 		mkdir( meta_data.results_folder )
 	end
+	%}
+	meta_struct = setFileMetaData( meta_struct, files_struct( file_index ) );
 
 	%% Load in the video
 
