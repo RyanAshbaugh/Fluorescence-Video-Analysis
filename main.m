@@ -12,57 +12,42 @@ end
 
 %% Set variables
 
-meta_data = struct;
+meta_struct = struct;
 
 if directory == true
 	% select folder with window
 
 	disp([ newline 'Select a folder to open in the window...' ]);
-	meta_data.dname = strcat(uigetdir('Select Folder'),'\');
-	disp([ 'Folder: ' meta_data.dname newline ]);
+	meta_struct.dname = strcat(uigetdir('Select Folder'),'\');
+	disp([ 'Folder: ' meta_struct.dname newline ]);
 
 	% put all files in folder into a list
-	files = dir(strcat(meta_data.dname, '/**/*.avi'));
+	files_struct = dir(strcat(meta_struct.dname, '/**/*.avi'));
 
 	% for each file
-	disp([ 'Analyzing each file in ' meta_data.dname '...' newline ]);
+	disp([ 'Analyzing each file in ' meta_struct.dname '...' newline ]);
 
 elseif directory == false
 	% select file with window
 	disp([ newline 'Select a file to open in the window...' ]);
-	[ file, meta_data.dname ] = uigetfile('*.avi','Select File');
-	files = dir(strcat(meta_data.dname, file));
+	[ file, meta_struct.dname ] = uigetfile('*.avi','Select File');
+	files_struct = dir(strcat(meta_struct.dname, file));
 
 end
 
 %% Go through each file and analyze it
 
-for file_index = 1:length(files)
-	%{meta_data.fname = files(ii).name;
-	meta_data.fpath = [ meta_data.dname filesep files(ii).name ];
-	backslashes = strfind(meta_data.dname,'\');
-	meta_data.experiment_name = ...
-		meta_data.dname( backslashes( end-2 )+1:backslashes( end-1 )-1 );
-	meta_data.results_folder = strcat('../Results/fluorescence-video-analysis/',...
-		meta_data.experiment_name,'/',meta_data.fname,'/');
-%end
+for file_index = 1:length(files_struct)
 
-	% create folders for output data
-
-	if ~exist( meta_data.results_folder, 'dir' )
-		disp([ 'Making directory: ' meta_data.results_folder ]);
-		mkdir( meta_data.results_folder )
-	end
-	%}
 	meta_struct = setFileMetaData( meta_struct, files_struct( file_index ) );
 
 	%% Load in the video
 
-	disp([ 'Directory: ' meta_data.dname ]);
-	disp([ 'File: ' meta_data.fname newline ]);
+	disp([ 'Directory: ' meta_struct.dname ]);
+	disp([ 'File: ' meta_struct.fname newline ]);
 
 	disp([ 'Reading in video data...' newline ]);
-	video = VideoReader(meta_data.fpath);
+	video = VideoReader(meta_struct.fpath);
 	green_channel = 2;
 
 	%disp([ 'Video has ' video.NumFrames ' frames and resolution ' ...
@@ -74,9 +59,9 @@ for file_index = 1:length(files)
 	% threshold absolute gradient, or tag, video file setup
 	disp([ 'Creating new video for calculating threshold absolute gradient...' ]);
 	tag_video_name = ...
-		strrep(meta_data.fname,'.avi','_tag_video.avi');
+		strrep(meta_struct.fname,'.avi','_tag_video.avi');
 	tag_video_fpath = ...
-		strcat(meta_data.results_folder,tag_video_name);
+		strcat(meta_struct.results_folder,tag_video_name);
 	disp([ 'Threshold absolute gradient video: ' tag_video_name newline ]);
 
 	tag_video = VideoWriter(tag_video_fpath,'Grayscale AVI');
@@ -91,14 +76,29 @@ for file_index = 1:length(files)
 
 	disp([ 'Processing video to calculate temporal threshold absolute gradient...']);
 	for jj = 1:1400
+		
+
+		%past_frame = read(video, jj-1);
+		frame_delta = 5; % * 200 msec
 		frame1 = read(video, jj);
-		frame2 = read(video, jj+10);
+		frame2 = read(video, jj + frame_delta);
 		difference_frame = ...
 			abs( frame2(:,:,green_channel) - frame1(:,:,green_channel) );
 		difference_frame = histeq(difference_frame);
-		%difference_frame = rgb2gray( difference_frame );
+
+		pixel_mean = mean(difference_frame,'all');
+		pixel_sd = std(single(difference_frame));
+		difference_frame( find(difference_frame < (pixel_mean + pixel_sd*2) ) ) = 0;
+
+		% threshold_value = graythresh( difference_frame );
+		% difference_frame( find(difference_frame < 255*threshold_value) ) = 0;
+
+		% average multiple frames to get rid of noise
+		%stacked_image = cat(2,past_frame,frame2);
+		%averaged_image = mean(stacked_image,3);
 
 		writeVideo( tag_video, difference_frame );
+
 	end
 
 	%% normalize tag to max change of whole video
