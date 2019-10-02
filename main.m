@@ -78,26 +78,13 @@ for file_index = 1:length(files_struct)
 	for jj = 1:1400
 		
 
-		%past_frame = read(video, jj-1);
-		frame_delta = 5; % * 200 msec
 		frame1 = read(video, jj);
-		frame2 = read(video, jj + frame_delta);
-		difference_frame = ...
-			abs( frame2(:,:,green_channel) - frame1(:,:,green_channel) );
-		difference_frame = histeq(difference_frame);
+		frame_green = frame1(:,:,green_channel);
 
-		pixel_mean = mean(difference_frame,'all');
-		pixel_sd = std(single(difference_frame));
-		difference_frame( find(difference_frame < (pixel_mean + pixel_sd*2) ) ) = 0;
+		ROIlayers = ROIgrow( frame_green, 3, 4, 'logical');
+		size(ROIlayers);
 
-		% threshold_value = graythresh( difference_frame );
-		% difference_frame( find(difference_frame < 255*threshold_value) ) = 0;
-
-		% average multiple frames to get rid of noise
-		%stacked_image = cat(2,past_frame,frame2);
-		%averaged_image = mean(stacked_image,3);
-
-		writeVideo( tag_video, difference_frame );
+		writeVideo( tag_video, frame_green );
 
 	end
 
