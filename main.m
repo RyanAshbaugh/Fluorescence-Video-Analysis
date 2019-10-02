@@ -70,25 +70,32 @@ for file_index = 1:length(files_struct)
 	% open the new tag video
 	open(tag_video);
 
+	% matrix to hold sum of all images
+	avg_all_images = zeros( size( read(video,1)), 'uint64' );
+
 	%% Go through frames of original video and calculate tag 
 
 	% for all but last frame, get frame and the next frame
 
 	disp([ 'Processing video to calculate temporal threshold absolute gradient...']);
-	for jj = 1:1400
+	for jj = 1:300
 		
-
 		%past_frame = read(video, jj-1);
 		frame_delta = 5; % * 200 msec
 		frame1 = read(video, jj);
 		frame2 = read(video, jj + frame_delta);
+
+		green_frame = frame1(:,:,green_channel);
+		histeq_frame = histeq( green_frame );
 		difference_frame = ...
 			abs( frame2(:,:,green_channel) - frame1(:,:,green_channel) );
-		difference_frame = histeq(difference_frame);
+		hist_diff_frame = histeq(difference_frame);
 
-		pixel_mean = mean(difference_frame,'all');
-		pixel_sd = std(single(difference_frame));
-		difference_frame( find(difference_frame < (pixel_mean + pixel_sd*2) ) ) = 0;
+		pixel_mean = mean(hist_diff_frame,'all');
+		pixel_sd = std(single(hist_diff_frame));
+
+		thresh_frame = zeros( size(hist_diff_frame) );
+		thresh_frame( find(hist_diff_frame < (pixel_mean + pixel_sd*2) ) ) = 0;
 
 		% threshold_value = graythresh( difference_frame );
 		% difference_frame( find(difference_frame < 255*threshold_value) ) = 0;
@@ -96,10 +103,18 @@ for file_index = 1:length(files_struct)
 		% average multiple frames to get rid of noise
 		%stacked_image = cat(2,past_frame,frame2);
 		%averaged_image = mean(stacked_image,3);
+	
+		% add frame to summation image
+		avg_all_images = avg_all_images + uint64(frame1);
 
-		writeVideo( tag_video, difference_frame );
+		writeVideo( tag_video, thresh_frame );
 
 	end
+
+	% divide to put values back into 0-255 range
+	figure;
+	avg_all_images = avg_all_images ./ jj;
+	imagesc(uint8(avg_all_images));
 
 	%% normalize tag to max change of whole video
 
