@@ -67,31 +67,68 @@ for file_index = 1:length(files_struct)
 	tag_video = VideoWriter(tag_video_fpath,'Grayscale AVI');
 	tag_video.FrameRate = 5;
 
+	dual_img_vid = strrep(tag_video_fpath,'tag_video.avi','dual_img.avi');
+	dual_img_vid = VideoWriter(dual_img_vid);
+	dual_img_vid.FrameRate = 5;
+
 	% open the new tag video
 	open(tag_video);
+	open(dual_img_vid);
 
 	%% Go through frames of original video and calculate tag 
 
 	% for all but last frame, get frame and the next frame
 
+	sum_image = zeros( size(read(video,1)), 'uint64' );
+	delta = 5;
+	
+	frame_list = 1500;
+	fig = figure('visible','off');
 	disp([ 'Processing video to calculate temporal threshold absolute gradient...']);
-	for jj = 1:1400
+	for jj = 1:(1500-delta)
 		
 
-		frame1 = read(video, jj);
+		try
+			frame1 = read(video, jj);
+		catch ME
+			break
+		end
 		frame_green = frame1(:,:,green_channel);
 
-		ROIlayers = ROIgrow( frame_green, 3, 4, 'logical');
-		size(ROIlayers);
+		sum_image = sum_image + uint64( frame_green );
+
+		delta_frame = read(video,jj+delta);
+		diff_frame = abs( frame_green - delta_frame );
+
+		subplot(2,1,1);
+		imagesc( frame_green );
+		subplot(2,1,2);
+		imshow( diff_frame );
+		%frame_list(jj) = getframe(gcf);
+
+		%{
+		ROIlayers = ROIgrow( frame_green, 4, 10, 'numbered');
+		size(ROIlayers)
+		figure;
+		imagesc(ROIlayers);
+		input('wait');
+		masked_green = uint8( frame_green .* uint8(ROIlayers) );
+		%}
 
 		writeVideo( tag_video, frame_green );
+		writeVideo( dual_img_vid, getframe(gcf) );
+
 
 	end
+
+	sum_image = sum_image ./ jj;
+	imshow( uint8(sum_image) );
 
 	%% normalize tag to max change of whole video
 
 	disp([ 'Closing video: ' tag_video_name ]);
 	close(tag_video);
+	close(dual_img_vid);
 
 	end
 end
