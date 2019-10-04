@@ -69,7 +69,7 @@ for file_index = 1:length(files_struct)
 
 	dual_img_vid = strrep(tag_video_fpath,'tag_video.avi','dual_img.avi');
 	dual_img_vid = VideoWriter(dual_img_vid);
-	dual_img_vid.FrameRate = 5;
+	dual_img_vid.FrameRate = 25;
 
 	% open the new tag video
 	open(tag_video);
@@ -80,12 +80,12 @@ for file_index = 1:length(files_struct)
 	% for all but last frame, get frame and the next frame
 
 	sum_image = zeros( size(read(video,1)), 'uint64' );
-	delta = 5;
+	delta = 20;
 	
 	frame_list = 1500;
 	fig = figure('visible','off');
 	disp([ 'Processing video to calculate temporal threshold absolute gradient...']);
-	for jj = 1:(300-delta)
+	for jj = 1:(frame_list-delta)
 		
 
 		try
@@ -101,48 +101,80 @@ for file_index = 1:length(files_struct)
 		delta_frame = delta_frame(:,:,green_channel);
 		diff_frame = abs( frame_green - delta_frame );
 		histeq_frame = histeq( diff_frame );
-		%threshold_frame = 
 
-		subplot(2,1,1);
-		
+		pixel_mean = mean( histeq_frame );
+		pixel_sd = std( single(histeq_frame) );
+
+		thresh_frame = histeq_frame;
+		thresh_frame( find(histeq_frame < (pixel_mean + pixel_sd*1.5) )) = 0;
+
+		median_filtered_frame = medfilt2( thresh_frame, [5 5]);
+
+		subplot(2,2,1);
+		main_title_text = sprintf('Raw and Filtered. Time: %2.1f sec',( jj / tag_video.FrameRate ));
+		sgtitle(main_title_text);
+
 		imshow( frame1 );
 		title_text = sprintf('Avg+/-Std[min,max]= %2.1f+/-%2.1f [%2.1f, %2.1f]',...
 			mean(double(frame_green),'all'),std(double(frame_green(:))),...
 			min(double(frame_green(:))),max(double(frame_green(:))));
 		title( title_text );
-		subplot(2,1,2);
-		imshow( histeq_frame );
-		title_text2 = sprintf('Avg +/- Std [min,max] = %2.1f +/- %2.1f [%2.1f, %2.1f]',...
-			mean(double(histeq_frame),'all'),std(double(histeq_frame(:))),min(double(histeq_frame(:))),max(double(histeq_frame(:))));
-		title( title_text2 );
-		%frame_list(jj) = getframe(gcf);
 
-		%{
-		ROIlayers = ROIgrow( frame_green, 4, 10, 'numbered');
-		size(ROIlayers)
-		figure;
-		imagesc(ROIlayers);
-		input('wait');
-		masked_green = uint8( frame_green .* uint8(ROIlayers) );
-		%}
+		subplot(2,2,3);
+		imshow( median_filtered_frame );
+		title_text2 = sprintf('Avg +/- Std [min,max] = %2.1f +/- %2.1f [%2.1f, %2.1f]',...
+			mean(double(histeq_frame),'all'),std(double(histeq_frame(:))),...
+			min(double(histeq_frame(:))),max(double(histeq_frame(:))));
+		title( title_text2 );
+
+		mag_disp = subplot(2,2,2);
+		if ( jj > 600 ) & ( jj < 900 )
+			t1 = text(0.25,0.25,['Magnet' newline 'on']); axis off;
+			t1.Color = 'red';
+		else
+			t1 = text(0.25,0.25,['Magnet' newline 'off']); axis off;
+		end
+		t1.FontSize = 30;
 
 		writeVideo( tag_video, frame_green );
 		writeVideo( dual_img_vid, getframe(gcf) );
 
 
 	end
+	%% normalize tag to max change of whole video
 
+	disp([ 'Closing video: ' tag_video_name ]);
+	close(tag_video);
+	close(dual_img_vid);
+
+%{	
+	% load in whole video
+	frame_temp = read(video,1);
+	[ num_rows, num_cols ] = size( frame_temp(:,1:2) );
+	vid_length = 1500;
+	time_downsampled = zeros( num_rows, num_cols, vid_length/5);
+	size(time_downsampled)
+
+	full_vid = zeros( num_rows, num_cols, vid_length );
+	for kk = 1:vid_length
+		temp_frame = read(video,kk);
+		full_vid(:,kk) = temp_frame(:,:,green_channel);
+	end
+
+	% do temporal downsampling
+	ds_rate = 5;
+	for kk = 1:size(time_downsampled,3)
+		bin_start = (kk-1)*ds_rate + 1;
+		bin_end = (kk-1)*ds_rate + 1 + 5;
+		time_downsampled(:,kk) = mean( full_vid(:,:,bin_start:bin_end), 3);
+	end
+%}
 	sum_image = sum_image ./ jj;
 	sum_image = uint8(sum_image);
 	
 	fig2 = figure;
 	imshow( sum_image );
 
-	%% normalize tag to max change of whole video
-
-	disp([ 'Closing video: ' tag_video_name ]);
-	close(tag_video);
-	close(dual_img_vid);
 
 	end
 end
