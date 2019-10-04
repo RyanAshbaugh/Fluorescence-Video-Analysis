@@ -85,7 +85,7 @@ for file_index = 1:length(files_struct)
 	frame_list = 1500;
 	fig = figure('visible','off');
 	disp([ 'Processing video to calculate temporal threshold absolute gradient...']);
-	for jj = 1:(1500-delta)
+	for jj = 1:(300-delta)
 		
 
 		try
@@ -98,12 +98,23 @@ for file_index = 1:length(files_struct)
 		sum_image = sum_image + uint64( frame_green );
 
 		delta_frame = read(video,jj+delta);
+		delta_frame = delta_frame(:,:,green_channel);
 		diff_frame = abs( frame_green - delta_frame );
+		histeq_frame = histeq( diff_frame );
+		%threshold_frame = 
 
 		subplot(2,1,1);
-		imagesc( frame_green );
+		
+		imshow( frame1 );
+		title_text = sprintf('Avg+/-Std[min,max]= %2.1f+/-%2.1f [%2.1f, %2.1f]',...
+			mean(double(frame_green),'all'),std(double(frame_green(:))),...
+			min(double(frame_green(:))),max(double(frame_green(:))));
+		title( title_text );
 		subplot(2,1,2);
-		imshow( diff_frame );
+		imshow( histeq_frame );
+		title_text2 = sprintf('Avg +/- Std [min,max] = %2.1f +/- %2.1f [%2.1f, %2.1f]',...
+			mean(double(histeq_frame),'all'),std(double(histeq_frame(:))),min(double(histeq_frame(:))),max(double(histeq_frame(:))));
+		title( title_text2 );
 		%frame_list(jj) = getframe(gcf);
 
 		%{
@@ -122,7 +133,10 @@ for file_index = 1:length(files_struct)
 	end
 
 	sum_image = sum_image ./ jj;
-	imshow( uint8(sum_image) );
+	sum_image = uint8(sum_image);
+	
+	fig2 = figure;
+	imshow( sum_image );
 
 	%% normalize tag to max change of whole video
 
