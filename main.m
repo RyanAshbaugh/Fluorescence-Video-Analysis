@@ -48,11 +48,12 @@ for file_index = 1:length(files_struct)
 
 	disp([ 'Reading in video data...' newline ]);
 	video = VideoReader(meta_struct.fpath);
+
+
+	% general variables for given file
+	num_frames = 100;
 	green_channel = 2;
-
-	%disp([ 'Video has ' video.NumFrames ' frames and resolution ' ...
-	%	video.Width ',' video.Height]);
-
+	frames_per_second = 5;
 
 	%% Create new video to store threshold absolute gradient
 
@@ -65,20 +66,38 @@ for file_index = 1:length(files_struct)
 	disp([ 'Threshold absolute gradient video: ' tag_video_name newline ]);
 
 	tag_video = VideoWriter(tag_video_fpath,'Grayscale AVI');
-	tag_video.FrameRate = 5;
+	tag_video.FrameRate = frames_per_second;
 
 	dual_img_vid = strrep(tag_video_fpath,'tag_video.avi','dual_img.avi');
 	dual_img_vid = VideoWriter(dual_img_vid);
-	dual_img_vid.FrameRate = 25;
+	dual_img_vid.FrameRate = frames_per_second * 5;	% speed up by 5
 
 	% open the new tag video
 	open(tag_video);
 	open(dual_img_vid);
 
+
+	tic;
+
+	for ii = 1:1000
+
+		read(video,ii);
+
+	end
+
+	for ii = 1:1000
+
+	end
+
+	toc;
+
+	close(tag_video);
+	close(dual_img_vid);
 	%% Go through frames of original video and calculate tag 
 
 	% for all but last frame, get frame and the next frame
 
+	%{
 	sum_image = zeros( size(read(video,1)), 'uint64' );
 	delta = 20;
 	
@@ -177,4 +196,5 @@ for file_index = 1:length(files_struct)
 
 
 	end
+	%}
 end
