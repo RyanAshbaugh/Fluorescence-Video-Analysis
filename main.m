@@ -49,10 +49,34 @@ for file_index = 1:length(files_struct)
 	disp([ 'Reading in video data...' newline ]);
 	video = VideoReader(meta_struct.fpath);
 
+	%movie = read(video);
+	disp('number of frames');
+	
+	green_channel = 2;
+	video_frames = read(video);
+	video_grayscale = int64(video_frames(:,:,green_channel,:));
+	integrated_image = uint8( sum( video_grayscale, 4 ) ./ video.NumberofFrames );
+	median_filtered = medfilt2( integrated_image, [ 3 3 ] );
+	histeq_image = histeq(median_filtered);
+	heq_thresh = histeq_image;
+	heq_thresh( heq_thresh < 220 ) = 0;
+
+	binarized_image = imbinarize( integrated_image, 'adaptive',...
+	   'Sensitivity', 0.55 );
+   	binarized_medfilt = medfilt2( binarized_image, [ 7 7 ] );
+
+
+   	montage_array = [ integrated_image histeq_image heq_thresh; ...
+		(binarized_image*255) (binarized_medfilt*255) zeros(size(binarized_image))];
+	fig2 = figure;
+	montage( montage_array );
+
+	fig3 = figure;
+	histogram( histeq_image );
+	%imshowpair( integrated_image, binarized_image, 'montage' );
 
 	% general variables for given file
 	num_frames = 100;
-	green_channel = 2;
 	frames_per_second = 5;
 
 	%% Create new video to store threshold absolute gradient
@@ -77,15 +101,29 @@ for file_index = 1:length(files_struct)
 	open(dual_img_vid);
 
 
+
+
+
 	tic;
 
 	for ii = 1:1000
 
-		read(video,ii);
+		frame1 = read(video,ii);
+
+		temp_frame = frame1;
 
 	end
 
+	toc;
+
+	% store then access
+	tic;
+
 	for ii = 1:1000
+
+		frame1 = read(video,ii);
+
+		temp_frame = frame1;
 
 	end
 
@@ -191,8 +229,6 @@ for file_index = 1:length(files_struct)
 	sum_image = sum_image ./ jj;
 	sum_image = uint8(sum_image);
 	
-	fig2 = figure;
-	imshow( sum_image );
 
 
 	end
