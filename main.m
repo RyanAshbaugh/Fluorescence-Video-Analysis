@@ -49,11 +49,11 @@ for file_index = 1:length(files_struct)
 	disp([ 'Reading in video data...' newline ]);
 	video = VideoReader(meta_struct.fpath);
 
-	%movie = read(video);
 	disp('number of frames');
+	video.NumberofFrames
 	
 	green_channel = 2;
-	video_frames = read(video);
+	video_frames = read(video, [ 1 ( video.NumberofFrames - 1400) ] );
 	video_grayscale = int64(video_frames(:,:,green_channel,:));
 	integrated_image = uint8( sum( video_grayscale, 4 ) ./ video.NumberofFrames );
 	median_filtered = medfilt2( integrated_image, [ 3 3 ] );
@@ -70,6 +70,14 @@ for file_index = 1:length(files_struct)
 		(binarized_image*255) (binarized_medfilt*255) zeros(size(binarized_image))];
 	fig2 = figure;
 	montage( montage_array );
+
+	integrated_image_name = ...
+		strrep(meta_struct.fname,'.avi','_integrated_image.png');
+	integrated_image_fpath = ...
+		strcat(meta_struct.results_folder,integrated_image_name);
+	display('Integrated Image name');
+	integrated_image_name
+	imwrite( binarized_medfilt, integrated_image_fpath );
 
 	fig3 = figure;
 	histogram( histeq_image );
@@ -104,30 +112,6 @@ for file_index = 1:length(files_struct)
 
 
 
-	tic;
-
-	for ii = 1:1000
-
-		frame1 = read(video,ii);
-
-		temp_frame = frame1;
-
-	end
-
-	toc;
-
-	% store then access
-	tic;
-
-	for ii = 1:1000
-
-		frame1 = read(video,ii);
-
-		temp_frame = frame1;
-
-	end
-
-	toc;
 
 	close(tag_video);
 	close(dual_img_vid);
@@ -204,28 +188,6 @@ for file_index = 1:length(files_struct)
 	close(tag_video);
 	close(dual_img_vid);
 
-%{	
-	% load in whole video
-	frame_temp = read(video,1);
-	[ num_rows, num_cols ] = size( frame_temp(:,1:2) );
-	vid_length = 1500;
-	time_downsampled = zeros( num_rows, num_cols, vid_length/5);
-	size(time_downsampled)
-
-	full_vid = zeros( num_rows, num_cols, vid_length );
-	for kk = 1:vid_length
-		temp_frame = read(video,kk);
-		full_vid(:,kk) = temp_frame(:,:,green_channel);
-	end
-
-	% do temporal downsampling
-	ds_rate = 5;
-	for kk = 1:size(time_downsampled,3)
-		bin_start = (kk-1)*ds_rate + 1;
-		bin_end = (kk-1)*ds_rate + 1 + 5;
-		time_downsampled(:,kk) = mean( full_vid(:,:,bin_start:bin_end), 3);
-	end
-%}
 	sum_image = sum_image ./ jj;
 	sum_image = uint8(sum_image);
 	
