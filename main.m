@@ -30,7 +30,7 @@ if directory == true
 elseif directory == false
 	% select file with window
 	disp([ newline 'Select a file to open in the window...' ]);
-	[ file, meta_struct.dname ] = uigetfile('*.avi','Select File');
+	[ file, meta_struct.dname ] = uigetfile('../*.avi','Select File');
 	files_struct = dir(strcat(meta_struct.dname, file));
 
 end
@@ -39,7 +39,21 @@ end
 
 for file_index = 1:length(files_struct)
 
-	meta_struct = setFileMetaData( meta_struct, files_struct( file_index ) );
+	%meta_struct = setFileMetaData( meta_struct, files_struct( file_index ) );
+	meta_struct.fname = files_struct(file_index).name;
+	meta_struct.fpath = [ meta_struct.dname filesep files_struct(file_index).name ];
+	backslashes = strfind(meta_struct.dname,'\');
+	meta_struct.experiment_name = ...
+		meta_struct.dname( backslashes( end - 2 ) + 1: backslashes( end - 1 ) - 1 );
+	meta_struct.results_folder = strcat( '../Results/fluorescence-video-analysis/',...
+		meta_struct.experiment_name,'/',meta_struct.fname(1:end-4),'/');
+
+	% make results folder if it is not there
+	if ~exist( meta_struct.results_folder, 'dir' );
+		mkdir( meta_struct.results_folder );
+	end
+	disp('meta_struct.results_folder');
+	meta_struct.results_folder
 
 	%% Load in the video
 
@@ -49,13 +63,19 @@ for file_index = 1:length(files_struct)
 	disp([ 'Reading in video data...' newline ]);
 	video = VideoReader(meta_struct.fpath);
 
-	disp('number of frames');
-	video.NumberofFrames
-	
 	green_channel = 2;
-	video_frames = read(video, [ 1 ( video.NumberofFrames - 1400) ] );
-	video_grayscale = int64(video_frames(:,:,green_channel,:));
-	integrated_image = uint8( sum( video_grayscale, 4 ) ./ video.NumberofFrames );
+	%video_frames = read(video);
+	%video_frames = read(video, [ 1 ( video.NumberofFrames ) ] );
+	%video_grayscale = zeros( video.Height, video.Width, 1, video.NumberofFrames );
+	integrated_image_64 = zeros( video.Height, video.Width, 1, 'int64' );
+	for jj = 1:video.NumberofFrames
+		temp_frame = read(video, jj);
+		%video_grayscale = temp_frame(:,:,green_channel,jj);
+		integrated_image_64 = integrated_image_64 + int64( temp_frame(:,:,green_channel) );
+	end
+	integrated_image = uint8( integrated_image_64 ./ video.NumberofFrames );
+	%video_grayscale = int64(video_frames(:,:,green_channel,:));
+	%integrated_image = uint8( sum( video_grayscale, 4 ) ./ video.NumberofFrames );
 	median_filtered = medfilt2( integrated_image, [ 3 3 ] );
 	histeq_image = histeq(median_filtered);
 	heq_thresh = histeq_image;
@@ -75,10 +95,15 @@ for file_index = 1:length(files_struct)
 		strrep(meta_struct.fname,'.avi','_integrated_image.png');
 	integrated_image_fpath = ...
 		strcat(meta_struct.results_folder,integrated_image_name);
-	display('Integrated Image name');
-	integrated_image_name
-	imwrite( binarized_medfilt, integrated_image_fpath );
+	imwrite( integrated_image, integrated_image_fpath );
 
+	binarized_image_name = ...
+		strrep(meta_struct.fname, '.avi','_binarized_image.png');
+	binarized_image_fpath = ...
+		strcat(meta_struct.results_folder,binarized_image_name);
+	imwrite( binarized_medfilt, binarized_image_fpath );
+
+	%{
 	fig3 = figure;
 	histogram( histeq_image );
 	%imshowpair( integrated_image, binarized_image, 'montage' );
@@ -119,7 +144,6 @@ for file_index = 1:length(files_struct)
 
 	% for all but last frame, get frame and the next frame
 
-	%{
 	sum_image = zeros( size(read(video,1)), 'uint64' );
 	delta = 20;
 	
