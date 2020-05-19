@@ -6,9 +6,8 @@ function main( directory )
 % Date: 9-10-19
 % Author: Ryan Ashbaugh
 
-if nargin < 1
-	directory = false;
-end
+% check if a directory was given as input
+if nargin < 1;	directory = false; end
 
 %% Set variables
 
@@ -64,18 +63,12 @@ for file_index = 1:length(files_struct)
 	video = VideoReader(meta_struct.fpath);
 
 	green_channel = 2;
-	%video_frames = read(video);
-	%video_frames = read(video, [ 1 ( video.NumberofFrames ) ] );
-	%video_grayscale = zeros( video.Height, video.Width, 1, video.NumberofFrames );
 	integrated_image_64 = zeros( video.Height, video.Width, 1, 'int64' );
 	for jj = 1:video.NumberofFrames
 		temp_frame = read(video, jj);
-		%video_grayscale = temp_frame(:,:,green_channel,jj);
 		integrated_image_64 = integrated_image_64 + int64( temp_frame(:,:,green_channel) );
 	end
 	integrated_image = uint8( integrated_image_64 ./ video.NumberofFrames );
-	%video_grayscale = int64(video_frames(:,:,green_channel,:));
-	%integrated_image = uint8( sum( video_grayscale, 4 ) ./ video.NumberofFrames );
 	median_filtered = medfilt2( integrated_image, [ 3 3 ] );
 	histeq_image = histeq(median_filtered);
 	heq_thresh = histeq_image;
@@ -103,120 +96,5 @@ for file_index = 1:length(files_struct)
 		strcat(meta_struct.results_folder,binarized_image_name);
 	imwrite( binarized_medfilt, binarized_image_fpath );
 
-	%{
-	fig3 = figure;
-	histogram( histeq_image );
-	%imshowpair( integrated_image, binarized_image, 'montage' );
-
-	% general variables for given file
-	num_frames = 100;
-	frames_per_second = 5;
-
-	%% Create new video to store threshold absolute gradient
-
-	% threshold absolute gradient, or tag, video file setup
-	disp([ 'Creating new video for calculating threshold absolute gradient...' ]);
-	tag_video_name = ...
-		strrep(meta_struct.fname,'.avi','_tag_video.avi');
-	tag_video_fpath = ...
-		strcat(meta_struct.results_folder,tag_video_name);
-	disp([ 'Threshold absolute gradient video: ' tag_video_name newline ]);
-
-	tag_video = VideoWriter(tag_video_fpath,'Grayscale AVI');
-	tag_video.FrameRate = frames_per_second;
-
-	dual_img_vid = strrep(tag_video_fpath,'tag_video.avi','dual_img.avi');
-	dual_img_vid = VideoWriter(dual_img_vid);
-	dual_img_vid.FrameRate = frames_per_second * 5;	% speed up by 5
-
-	% open the new tag video
-	open(tag_video);
-	open(dual_img_vid);
-
-
-
-
-
-
-	close(tag_video);
-	close(dual_img_vid);
-	%% Go through frames of original video and calculate tag 
-
-	% for all but last frame, get frame and the next frame
-
-	sum_image = zeros( size(read(video,1)), 'uint64' );
-	delta = 20;
-	
-	frame_list = 1500;
-	fig = figure('visible','off');
-	disp([ 'Processing video to calculate temporal threshold absolute gradient...']);
-	for jj = 1:(frame_list-delta)
-		
-
-		try
-			frame1 = read(video, jj);
-		catch ME
-			break
-		end
-		frame_green = frame1(:,:,green_channel);
-
-		sum_image = sum_image + uint64( frame_green );
-
-		delta_frame = read(video,jj+delta);
-		delta_frame = delta_frame(:,:,green_channel);
-		diff_frame = abs( frame_green - delta_frame );
-		histeq_frame = histeq( diff_frame );
-
-		pixel_mean = mean( histeq_frame );
-		pixel_sd = std( single(histeq_frame) );
-
-		thresh_frame = histeq_frame;
-		thresh_frame( find(histeq_frame < (pixel_mean + pixel_sd*1.5) )) = 0;
-
-		median_filtered_frame = medfilt2( thresh_frame, [5 5]);
-
-		subplot(2,2,1);
-		main_title_text = sprintf('Raw and Filtered. Time: %2.1f sec',( jj / tag_video.FrameRate ));
-		sgtitle(main_title_text);
-
-		imshow( frame1 );
-		title_text = sprintf('Avg+/-Std[min,max]= %2.1f+/-%2.1f [%2.1f, %2.1f]',...
-			mean(double(frame_green),'all'),std(double(frame_green(:))),...
-			min(double(frame_green(:))),max(double(frame_green(:))));
-		title( title_text );
-
-		subplot(2,2,3);
-		imshow( median_filtered_frame );
-		title_text2 = sprintf('Avg +/- Std [min,max] = %2.1f +/- %2.1f [%2.1f, %2.1f]',...
-			mean(double(histeq_frame),'all'),std(double(histeq_frame(:))),...
-			min(double(histeq_frame(:))),max(double(histeq_frame(:))));
-		title( title_text2 );
-
-		mag_disp = subplot(2,2,2);
-		if ( jj > 600 ) & ( jj < 900 )
-			t1 = text(0.25,0.25,['Magnet' newline 'on']); axis off;
-			t1.Color = 'red';
-		else
-			t1 = text(0.25,0.25,['Magnet' newline 'off']); axis off;
-		end
-		t1.FontSize = 30;
-
-		writeVideo( tag_video, frame_green );
-		writeVideo( dual_img_vid, getframe(gcf) );
-
-
-	end
-	%% normalize tag to max change of whole video
-
-	disp([ 'Closing video: ' tag_video_name ]);
-	close(tag_video);
-	close(dual_img_vid);
-
-	sum_image = sum_image ./ jj;
-	sum_image = uint8(sum_image);
-	
-
-
-	end
-	%}
+	clear all
 end
