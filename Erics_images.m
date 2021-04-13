@@ -126,6 +126,41 @@ dilate_overlay = imoverlay( histeq( color_brightest ), dilate_image, 'r' );
 figure('name', 'overlay image' );
 imshow( dilate_overlay );
 
+% process whole video
+roi_stats = regionprops( dilate_image, 'Centroid' );
+
+
+bright_centroids = cat(1, roi_stats.Centroid );
+circle_radii = 2;
+
+% setup video
+output_video_fname = strcat( meta_struct.dname, 'cell_overlay.mp4' );
+output_video = VideoWriter( output_video_fname, 'MPEG-4' );
+output_video.FrameRate = 10;
+open( output_video );
+
+
+figure('name', 'Centroid overlay')
+for ii = 1:size( image_sequence, 3 )
+
+	temp_img = image_sequence(:,:,ii);
+	temp_color = uint8( temp_img / (2^8) );
+	
+	hold on;
+	imshow( histeq(temp_color) );
+	viscircles( bright_centroids, repmat( circle_radii, ...
+		size( bright_centroids,1 ), 1 ) );
+	hold off;
+	drawnow();
+
+	writeVideo( output_video, getframe );
+
+
+end
+
+disp( [ 'Closing video: ', output_video_fname ] );
+close( output_video );
+
 	%{
 integrated_image = uint8( integrated_image_64 ./ num_images );
 median_filtered = medfilt2( integrated_image, [ 3 3 ] );
