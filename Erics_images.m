@@ -131,7 +131,7 @@ roi_stats = regionprops( dilate_image, 'Centroid' );
 
 
 bright_centroids = cat(1, roi_stats.Centroid );
-circle_radii = 2;
+circle_radii = 1;
 
 % setup video
 output_video_fname = strcat( meta_struct.dname, 'cell_overlay.mp4' );
