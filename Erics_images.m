@@ -3,6 +3,7 @@ close all; clear all;
 % Set variables
 moving_avg_width = 9;
 delta_r_end_time = 150;
+baseline_index = 1;
 image_data_type = 'uint16';
 lap_percent = 0.80;
 output_video_frame_rate = 10;
@@ -24,21 +25,21 @@ roi_image = detectROIs( brightest_frame, lap_percent );
 
 % compare with overlay
 overlay_image = overlayFullROIs( brightest_frame, roi_image );
-figure('name', 'overlay image' );
-imshow( overlay_image );
+%figure('name', 'overlay image' );
+%imshow( overlay_image );
 
 % process whole video
-bright_centroids = calculateROICentroids( roi_image )
+cell_roi_centroids = calculateROICentroids( roi_image );
 
 createCentroidOverlayVideo( directory_name, output_video_frame_rate, ...
-	image_sequence, bright_centroids, overlay_video_circle_radii )
+	image_sequence, cell_roi_centroids, overlay_video_circle_radii );
 
 % calculate roi mean pixel value for every frame
 sequence_roi_means = calculateROIPixelMeansSequence( image_sequence, ...
-	bright_centroids );
+	cell_roi_centroids );
 
 smoothed_roi_means = movmean( sequence_roi_means, moving_avg_width, 2 );
-normalized_roi_means = normalizeTraces( smoothed_roi_means );
+normalized_roi_means = normalizeTraces( smoothed_roi_means, baseline_index );
 
 delta_r = calculateDeltaBright( normalized_roi_means, delta_r_end_time );
 
