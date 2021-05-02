@@ -3,7 +3,6 @@ close all; clear all;
 % Set variables
 moving_avg_width = 9;
 delta_r_end_time = 150;
-lap_filter = [ - 1, -1, -1; -1, 8, -1; -1, -1, -1 ];
 image_data_type = 'uint16';
 lap_percent = 0.80;
 output_video_frame_rate = 10;
@@ -21,6 +20,7 @@ mean_frame_trace = calculateMeanFrameSequenceTrace( image_sequence );
 
 brightest_frame = getBrightestFrame( mean_frame_trace, image_sequence );
 
+%{
 % take Laplacian of best frame
 lap_thresh_image = thresholdedAbsoluteLaplacian( brightest_frame, lap_percent);
 
@@ -48,6 +48,9 @@ dilate_image = imdilate( median_image, se );
 
 figure( 'name', 'dilated image' );
 imshow( dilate_image );
+%}
+
+dilate_image = detectROIs( brightest_frame, lap_percent );
 
 % compare with overlay
 overlay_image = overlayFullROIs( brightest_frame, dilate_image );
