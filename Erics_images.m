@@ -20,46 +20,15 @@ mean_frame_trace = calculateMeanFrameSequenceTrace( image_sequence );
 
 brightest_frame = getBrightestFrame( mean_frame_trace, image_sequence );
 
-%{
-% take Laplacian of best frame
-lap_thresh_image = thresholdedAbsoluteLaplacian( brightest_frame, lap_percent);
-
-% get product of thresholded laplacian and original
-masked_by_laplacian = brightest_frame .* uint16( lap_thresh_image );
-
-% binarize based on new masked image
-figure()
-binarized = imbinarize( masked_by_laplacian, 'adaptive' );
-
-final_image = medfilt2( binarized, [3 3] );
-imshow( final_image );
-
-% erode and regrow image
-se = strel( 'square', 3 );
-eroded_image = imerode( final_image, se );
-
-figure('name', 'eroded');
-imshow( eroded_image );
-
-% filter and dilate
-median_image = medfilt2( eroded_image, [ 5 5 ] );
-
-dilate_image = imdilate( median_image, se );
-
-figure( 'name', 'dilated image' );
-imshow( dilate_image );
-%}
-
-dilate_image = detectROIs( brightest_frame, lap_percent );
+roi_image = detectROIs( brightest_frame, lap_percent );
 
 % compare with overlay
-overlay_image = overlayFullROIs( brightest_frame, dilate_image );
+overlay_image = overlayFullROIs( brightest_frame, roi_image );
 figure('name', 'overlay image' );
 imshow( overlay_image );
 
 % process whole video
-roi_stats = regionprops( dilate_image, 'Centroid' );
-bright_centroids = cat(1, roi_stats.Centroid );
+bright_centroids = calculateROICentroids( roi_image )
 
 createCentroidOverlayVideo( directory_name, output_video_frame_rate, ...
 	image_sequence, bright_centroids, overlay_video_circle_radii )
