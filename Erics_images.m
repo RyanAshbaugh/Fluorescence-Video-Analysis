@@ -10,6 +10,7 @@
 close all; clear all;
 
 moving_avg_width = 9;
+delta_r_end_time = 150;
 
 lap_filter = [ - 1, -1, -1; -1, 8, -1; -1, -1, -1 ];
 
@@ -151,6 +152,11 @@ sequence_roi_means = calculateROIPixelMeansSequence( image_sequence, ...
 
 smoothed_roi_means = movmean( sequence_roi_means, moving_avg_width, 2 );
 normalized_roi_means = normalizeTraces( smoothed_roi_means );
+
+delta_r = calculateDeltaBright( normalized_roi_means, delta_r_end_time );
+
+conditon_mean_delta_r = mean( delta_r );
+conditon_median_delta_r = median( delta_r );
 
 figure()
 plot( 1:num_images, normalized_roi_means' );
