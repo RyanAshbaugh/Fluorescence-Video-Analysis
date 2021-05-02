@@ -9,28 +9,23 @@
 % check if a directory was given as input
 close all; clear all;
 
+% Set variables
 moving_avg_width = 9;
 delta_r_end_time = 150;
-
 lap_filter = [ - 1, -1, -1; -1, 8, -1; -1, -1, -1 ];
 
-% Set variables
-
-meta_struct = struct;
-
 % select file with window
-disp([ newline 'Select a folder containing the .tifs to be analyzed...' ]);
-meta_struct.dname = strcat(uigetdir('Select Folder'),'\');
-disp([ 'Folder: ', meta_struct.dname newline ] );
+directory_name = selectFolderOfTiffs();
+filenames_struct = getFilenameStruct( directory_name, '.tif' );
 
-files_struct = dir(strcat(meta_struct.dname, '/**/*.tif'));
+%filenames_struct = dir(strcat(directory_name, '/**/*.tif'));
 
-disp([ 'Analyzing each file in ' meta_struct.dname '...' newline ] );
+disp([ 'Analyzing each file in ' directory_name '...' newline ] );
 
 % Go through each file and analyze it
-meta_struct.fpath = [ meta_struct.dname filesep files_struct(1).name ];
+meta_struct.fpath = [ directory_name filesep filenames_struct(1).name ];
 image_1 = imread( meta_struct.fpath );
-num_images = length( files_struct );
+num_images = length( filenames_struct );
 
 [ height, width ] = size( image_1 );
 integrated_image_64 = zeros( height, width, 1, 'int64' );
@@ -38,7 +33,7 @@ image_sequence = zeros( height, width, num_images, 'uint16' );
 
 for file_index = 1:num_images
 
-	meta_struct.fpath = [ meta_struct.dname filesep files_struct(file_index).name ];
+	meta_struct.fpath = [ directory_name filesep filenames_struct(file_index).name ];
 
 	A = imread( meta_struct.fpath );
 	image_sequence( :,:, file_index ) = A;
@@ -121,7 +116,7 @@ bright_centroids = cat(1, roi_stats.Centroid );
 circle_radii = 1;
 
 % setup video
-output_video_fname = strcat( meta_struct.dname, 'cell_overlay.mp4' );
+output_video_fname = strcat( directory_name, 'cell_overlay.mp4' );
 output_video = VideoWriter( output_video_fname, 'MPEG-4' );
 output_video.FrameRate = 10;
 open( output_video );
