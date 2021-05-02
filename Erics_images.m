@@ -19,15 +19,16 @@ mean_frame_trace = calculateMeanFrameSequenceTrace( image_sequence );
 brightest_frame = getBrightestFrame( mean_frame_trace, image_sequence );
 
 % take Laplacian of best frame
-%lap_filtered = abs( conv2( brightest_frame, lap_filter, 'same' ) );
 lap_filtered = laplacianFilterImage( brightest_frame );
-lap_hist = histogram( lap_filtered );
+[lap_hist,lap_hist_edges] = histcounts( lap_filtered );
+%lap_hist = histogram( lap_filtered );
 
 % use histogram of laplacian to get 99% image of laplacian edges
 lap_percent = 0.80;
-cdf = cumsum( lap_hist.Values )/ sum( lap_hist.Values );
+cdf = cumsum( lap_hist)/ sum( lap_hist);
+%cdf = cumsum( lap_hist.Values )/ sum( lap_hist.Values );
 [ ~, lap_threshold_index ] = min( abs( cdf - lap_percent ) );
-lap_threshold = lap_hist.BinEdges( lap_threshold_index );
+lap_threshold = lap_hist_edges( lap_threshold_index );
 
 lap_thresh_image = lap_filtered;
 lap_thresh_image( find( lap_thresh_image < lap_threshold ) ) = 0;
