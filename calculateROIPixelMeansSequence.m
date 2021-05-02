@@ -2,7 +2,8 @@ function sequence_roi_means = ...
 		calculateROIPixelMeansSequence( image_sequence, centroids )
 
 	num_rois = size( centroids, 1 );
-	sequence_roi_means = zeros( size( roi_mask, 3 ), num_frames );
+	num_frames = size( image_sequence, 3 );
+	sequence_roi_means = zeros( num_rois, num_frames );
 	
 	for ii = 1:num_rois
 

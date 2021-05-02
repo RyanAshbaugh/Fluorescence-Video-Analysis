@@ -9,6 +9,7 @@
 % check if a directory was given as input
 close all; clear all;
 
+moving_avg_width = 9;
 
 lap_filter = [ - 1, -1, -1; -1, 8, -1; -1, -1, -1 ];
 
@@ -142,6 +143,17 @@ for ii = 1:size( image_sequence, 3 )
 
 
 end
+
+
+% calculate roi mean pixel value for every frame
+sequence_roi_means = calculateROIPixelMeansSequence( image_sequence, ...
+	bright_centroids );
+
+smoothed_roi_means = movmean( sequence_roi_means, moving_avg_width, 2 );
+normalized_roi_means = normalizeTraces( smoothed_roi_means );
+
+figure()
+plot( 1:num_images, normalized_roi_means' );
 
 disp( [ 'Closing video: ', output_video_fname ] );
 close( output_video );
