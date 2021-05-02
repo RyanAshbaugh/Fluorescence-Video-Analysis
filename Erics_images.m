@@ -1,12 +1,3 @@
-%function main( directory )
-% File name: main.m
-% Purpose: read in .tif videow files of fluorescence images of cells in microscope
-% parameters: directory - flag for whether to search for directory or not
-% target file: .tif video file 
-% Date: 9-10-19
-% Author: Ryan Ashbaugh
-
-% check if a directory was given as input
 close all; clear all;
 
 % Set variables
@@ -22,22 +13,14 @@ image_sequence = loadImageSequence( filenames_struct, image_data_type );
 
 num_images = size( image_sequence, 3 );
 
-
-%R_naught = mean( image_sequence(:,:,1), 'all' );
-
-%mean_R = squeeze( mean( mean( image_sequence ) ) );
+% get the mean of each frame
 mean_frame_trace = calculateMeanFrameSequenceTrace( image_sequence );
-
-%{
-[ ~, brightest_index ] = max( mean_frame_trace );
-brightest_frame = squeeze(image_sequence(:,:,brightest_index));
-%}
 
 brightest_frame = getBrightestFrame( mean_frame_trace, image_sequence );
 
 % take Laplacian of best frame
-figure()
-lap_filtered = abs( conv2( brightest_frame, lap_filter, 'same' ) );
+%lap_filtered = abs( conv2( brightest_frame, lap_filter, 'same' ) );
+lap_filtered = laplacianFilterImage( brightest_frame );
 lap_hist = histogram( lap_filtered );
 
 % use histogram of laplacian to get 99% image of laplacian edges
