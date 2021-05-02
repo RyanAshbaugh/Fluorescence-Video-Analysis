@@ -20,29 +20,13 @@ mean_frame_trace = calculateMeanFrameSequenceTrace( image_sequence );
 brightest_frame = getBrightestFrame( mean_frame_trace, image_sequence );
 
 % take Laplacian of best frame
-%{
-lap_filtered = laplacianFilterImage( brightest_frame );
-[lap_hist,lap_hist_edges] = histcounts( lap_filtered );
-
-% use histogram of laplacian to get 99% image of laplacian edges
-cdf = cumsum( lap_hist)/ sum( lap_hist);
-[ ~, lap_threshold_index ] = min( abs( cdf - lap_percent ) );
-lap_threshold = lap_hist_edges( lap_threshold_index );
-
-lap_thresh_image = lap_filtered;
-lap_thresh_image( find( lap_thresh_image < lap_threshold ) ) = 0;
-%}
-
 lap_thresh_image = thresholdedAbsoluteLaplacian( brightest_frame, lap_percent);
-
-figure();
-imshow( lap_thresh_image );
 
 % get product of thresholded laplacian and original
 masked_by_laplacian = brightest_frame .* uint16( lap_thresh_image );
 
-figure()
-histogram( masked_by_laplacian( find( masked_by_laplacian>0 ) ) );
+%figure()
+%histogram( masked_by_laplacian( find( masked_by_laplacian>0 ) ) );
 
 % binarize based on new masked image
 figure()
@@ -68,14 +52,16 @@ imshow( dilate_image );
 
 
 % compare with overlay
+%{
 color_frame = uint8( brightest_frame/ (2^8) );
 
 color_brightest = cat( 3, color_frame, color_frame, color_frame );
 
 dilate_overlay = imoverlay( histeq( color_brightest ), dilate_image, 'r' );
-
+%}
+overlay_image = overlayFullROIs( brightest_frame, dilate_image );
 figure('name', 'overlay image' );
-imshow( dilate_overlay );
+imshow( overlay_image );
 
 % process whole video
 roi_stats = regionprops( dilate_image, 'Centroid' );
