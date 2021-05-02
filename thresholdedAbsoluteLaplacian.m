@@ -11,6 +11,6 @@ function lap_thresh_image = ...
 	lap_intensity_threshold = lap_hist_edges( lap_threshold_index );
 
 	lap_thresh_image = lap_filtered;
-	lap_thresh_image( find( lap_thresh_image < lap_threshold ) ) = 0;
+	lap_thresh_image( find( lap_thresh_image < lap_intensity_threshold ) ) = 0;
 
 end
