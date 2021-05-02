@@ -13,44 +13,27 @@ close all; clear all;
 moving_avg_width = 9;
 delta_r_end_time = 150;
 lap_filter = [ - 1, -1, -1; -1, 8, -1; -1, -1, -1 ];
+image_data_type = 'uint16';
 
 % select file with window
 directory_name = selectFolderOfTiffs();
 filenames_struct = getFilenameStruct( directory_name, '.tif' );
+image_sequence = loadImageSequence( filenames_struct, image_data_type );
 
-%filenames_struct = dir(strcat(directory_name, '/**/*.tif'));
+num_images = size( image_sequence, 3 );
 
-disp([ 'Analyzing each file in ' directory_name '...' newline ] );
 
-% Go through each file and analyze it
-meta_struct.fpath = [ directory_name filesep filenames_struct(1).name ];
-image_1 = imread( meta_struct.fpath );
-num_images = length( filenames_struct );
+%R_naught = mean( image_sequence(:,:,1), 'all' );
 
-[ height, width ] = size( image_1 );
-integrated_image_64 = zeros( height, width, 1, 'int64' );
-image_sequence = zeros( height, width, num_images, 'uint16' );
+%mean_R = squeeze( mean( mean( image_sequence ) ) );
+mean_frame_trace = calculateMeanFrameSequenceTrace( image_sequence );
 
-for file_index = 1:num_images
-
-	meta_struct.fpath = [ directory_name filesep filenames_struct(file_index).name ];
-
-	A = imread( meta_struct.fpath );
-	image_sequence( :,:, file_index ) = A;
-
-end
-
-R_naught = mean( image_sequence(:,:,1), 'all' );
-
-mean_R = squeeze( mean( mean( image_sequence ) ) );
-
-figure;
-plot( 1:num_images, mean_R ./ R_naught );
-xlabel( 'Frame' );
-ylabel( 'Normalized average image intensity' )
-
-[ ~, brightest_index ] = max( mean_R );
+%{
+[ ~, brightest_index ] = max( mean_frame_trace );
 brightest_frame = squeeze(image_sequence(:,:,brightest_index));
+%}
+
+brightest_frame = getBrightestFrame( mean_frame_trace, image_sequence );
 
 % take Laplacian of best frame
 figure()
