@@ -5,6 +5,7 @@ moving_avg_width = 9;
 delta_r_end_time = 150;
 lap_filter = [ - 1, -1, -1; -1, 8, -1; -1, -1, -1 ];
 image_data_type = 'uint16';
+lap_percent = 0.80;
 
 % select file with window
 directory_name = selectFolderOfTiffs();
@@ -19,19 +20,20 @@ mean_frame_trace = calculateMeanFrameSequenceTrace( image_sequence );
 brightest_frame = getBrightestFrame( mean_frame_trace, image_sequence );
 
 % take Laplacian of best frame
+%{
 lap_filtered = laplacianFilterImage( brightest_frame );
 [lap_hist,lap_hist_edges] = histcounts( lap_filtered );
-%lap_hist = histogram( lap_filtered );
 
 % use histogram of laplacian to get 99% image of laplacian edges
-lap_percent = 0.80;
 cdf = cumsum( lap_hist)/ sum( lap_hist);
-%cdf = cumsum( lap_hist.Values )/ sum( lap_hist.Values );
 [ ~, lap_threshold_index ] = min( abs( cdf - lap_percent ) );
 lap_threshold = lap_hist_edges( lap_threshold_index );
 
 lap_thresh_image = lap_filtered;
 lap_thresh_image( find( lap_thresh_image < lap_threshold ) ) = 0;
+%}
+
+lap_thresh_image = thresholdedAbsoluteLaplacian( brightest_frame, lap_percent);
 
 figure();
 imshow( lap_thresh_image );
