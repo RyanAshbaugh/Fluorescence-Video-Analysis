@@ -31,4 +31,10 @@ you want.
 The result is a display of the mean and median difference between all the
 normalized ROI traces at the specified frames, reported in percent change.
 
+To create a video which overlays a small circle on the ROI for all the images
+in the trace, use the overlayVideo.m script.
 
+>> overlayVideo
+
+This will save the overlay video as an MP4 in the same location as the images
+used to create it.
