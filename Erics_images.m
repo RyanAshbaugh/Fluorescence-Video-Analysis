@@ -36,25 +36,10 @@ image_sequence = zeros( height, width, num_images, 'uint16' );
 
 for file_index = 1:num_images
 
-	%meta_struct.fname = files_struct(file_index).name;
 	meta_struct.fpath = [ meta_struct.dname filesep files_struct(file_index).name ];
 
 	A = imread( meta_struct.fpath );
 	image_sequence( :,:, file_index ) = A;
-
-	%{
-	%histeq_image = histeq(A);
-	median_filtered = medfilt2( A, [3 3] );
-	histeq_image = histeq( median_filtered );
-	median_filtered = medfilt2( histeq_image, [3 3] );
-
-	%gamma_corrected = imadjust( A, [],[], 0.5 );
-	%imshow( gamma_corrected );
-	imshow( median_filtered );
-	drawnow;
-	%}
-
-	%integrated_image_64 = integrated_image_64 + int64( A );
 
 end
 
@@ -160,78 +145,5 @@ end
 
 disp( [ 'Closing video: ', output_video_fname ] );
 close( output_video );
-
-	%{
-integrated_image = uint8( integrated_image_64 ./ num_images );
-median_filtered = medfilt2( integrated_image, [ 3 3 ] );
-histeq_image = histeq(median_filtered);
-heq_thresh = histeq_image;
-
-imshow( heq_thresh );
-drawnow;
-
-	%backslashes = strfind(meta_struct.dname,'\');
-	%meta_struct.experiment_name = ...
-	%	meta_struct.dname( backslashes( end - 2 ) + 1: backslashes( end - 1 ) - 1 );
-	%meta_struct.results_folder = strcat( '../Results/fluorescence-video-analysis/',...
-	%	meta_struct.experiment_name,'/',meta_struct.fname(1:end-4),'/');
-
-	% make results folder if it is not there
-	if ~exist( meta_struct.results_folder, 'dir' );
-		mkdir( meta_struct.results_folder );
-	end
-	disp('meta_struct.results_folder');
-	meta_struct.results_folder
-
-	%% Load in the video
-
-	disp([ 'Directory: ' meta_struct.dname ]);
-	disp([ 'File: ' meta_struct.fname newline ]);
-
-	disp([ 'Reading in video data...' newline ]);
-	meta_struct.fpath
-
-	t = Tiff( meta_struct.fpath, 'r' )
-	imageData = read(t);
-
-	video = VideoReader(meta_struct.fpath);
-
-	green_channel = 2;
-	integrated_image_64 = zeros( video.Height, video.Width, 1, 'int64' );
-	for jj = 1:video.NumberofFrames
-		temp_frame = read(video, jj);
-		integrated_image_64 = integrated_image_64 + int64( temp_frame(:,:,green_channel) );
-	end
-	integrated_image = uint8( integrated_image_64 ./ video.NumberofFrames );
-	median_filtered = medfilt2( integrated_image, [ 3 3 ] );
-	histeq_image = histeq(median_filtered);
-	heq_thresh = histeq_image;
-	heq_thresh( heq_thresh < 220 ) = 0;
-
-	binarized_image = imbinarize( integrated_image, 'adaptive',...
-	   'Sensitivity', 0.55 );
-   	binarized_medfilt = medfilt2( binarized_image, [ 7 7 ] );
-
-
-   	montage_array = [ integrated_image histeq_image heq_thresh; ...
-		(binarized_image*255) (binarized_medfilt*255) zeros(size(binarized_image))];
-	fig2 = figure;
-	montage( montage_array );
-
-	integrated_image_name = ...
-		strrep(meta_struct.fname,'.avi','_integrated_image.png');
-	integrated_image_fpath = ...
-		strcat(meta_struct.results_folder,integrated_image_name);
-	imwrite( integrated_image, integrated_image_fpath );
-
-	binarized_image_name = ...
-		strrep(meta_struct.fname, '.avi','_binarized_image.png');
-	binarized_image_fpath = ...
-		strcat(meta_struct.results_folder,binarized_image_name);
-	imwrite( binarized_medfilt, binarized_image_fpath );
-
-	clear all
-	%}
-%end
 
 
