@@ -1,9 +1,9 @@
 function roi_mask = createManualROIMask( roi_image )
 
 
-	unique_pixels = unique( roi_image )
-	roi_labels = unique_pixels( unique_pixels ~= 0 )
-	num_rois = length( roi_labels )
+	unique_pixels = unique( roi_image );
+	roi_labels = unique_pixels( unique_pixels ~= 0 );
+	num_rois = length( roi_labels );
 
 	roi_mask = zeros( [ size( roi_image ), num_rois ], 'logical' );
 
