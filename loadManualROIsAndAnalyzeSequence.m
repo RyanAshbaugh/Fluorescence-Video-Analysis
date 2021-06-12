@@ -19,6 +19,10 @@ image_sequence = loadImageSequence( filenames_struct, image_data_type );
 median_filtered_sequence = medianFilterImageSequence( image_sequence, ...
 	median_kernel_size );
 
+% create a mask for pixels of each label, image_height x width x num labels 
+ROI_mask = createManualROIMask( pixel_roi_image );
+
+
 %{
 % calculate the ROI means using the mask of per label pixel ROIs
 sequence_roi_means = calculateROIPixelMeansSequence( ...
