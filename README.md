@@ -38,3 +38,10 @@ in the trace, use the overlayVideo.m script.
 
 This will save the overlay video as an MP4 in the same location as the images
 used to create it.
+
+******
+
+To use with manually selected ROIs, 
+
+
+
